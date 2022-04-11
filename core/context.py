@@ -27,16 +27,14 @@ class BoboContext(commands.Context):
     async def send(self, content: str | None = None, **kwargs: Any) -> discord.Message:
         codeblock = kwargs.pop('codeblock', False)
         lang = kwargs.pop('lang', 'py')
-        can_delete = kwargs.pop('can_delete', False)
-
-        if can_delete:
+        if can_delete := kwargs.pop('can_delete', False):
             view = kwargs.get('view', discord.ui.View())
             view.add_item(DeleteButton(self.user.id))
             kwargs['view'] = view
 
         if codeblock:
-            content = f'```{lang}\n' + str(content) + '\n```'
-        
+            content = f'```{lang}\n{str(content)}' + '\n```'
+
         if self.message.edited_at:
             if message := await self.bot.delete_message_manager.get_messages(self.message.id, True):
                 if 'file' in kwargs or 'files' in kwargs:
@@ -45,7 +43,7 @@ class BoboContext(commands.Context):
                     await self.bot.delete_message_manager.add_message(self.message.id, m.id)
 
                     return m
-                
+
                 m = self.channel.get_partial_message(message)
 
                 return await m.edit(content=content, **kwargs)
