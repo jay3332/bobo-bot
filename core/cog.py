@@ -16,17 +16,18 @@ class MetaTask(commands.CogMeta):
 
     def __new__(cls, name, bases, attrs, **kwargs):
         new_cls = super().__new__(cls, name, bases, attrs)
-        _inner_tasks = []
+        _inner_tasks = [
+            value
+            for key, value in attrs.items()
+            if issubclass(value.__class__, tasks.Loop)
+        ]
 
-        for key, value in attrs.items():
-            if issubclass(value.__class__, tasks.Loop):
-                _inner_tasks.append(value)
 
         new_cls.__tasks__ = _inner_tasks
         return new_cls
 
-    def _unload_tasks(cls):
-        for task in cls.__tasks__:
+    def _unload_tasks(self):
+        for task in self.__tasks__:
             coro = task.__dict__.get('coro')
             __log__.info(
                 f'Stopping task {coro.__name__} after {task.current_loop} intervals.'
